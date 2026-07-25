@@ -346,11 +346,13 @@ class OnboardingWindow(Widget):
 
     self.set_rect(rl.Rectangle(0, 0, gui_app.width, gui_app.height))
 
+    self.close()
+
     # Windows
-    self._terms = TermsPage(on_accept=self._on_terms_accepted, on_decline=self._on_uninstall)
-    self._terms.set_enabled(lambda: self.enabled)  # for nav stack
-    self._training_guide = TrainingGuide(completed_callback=self._on_completed_training)
-    self._training_guide.set_enabled(lambda: self.enabled)  # for nav stack
+    # self._terms = TermsPage(on_accept=self._on_terms_accepted, on_decline=self._on_uninstall)
+    # self._terms.set_enabled(lambda: self.enabled)  # for nav stack
+    # self._training_guide = TrainingGuide(completed_callback=self._on_completed_training)
+    # self._training_guide.set_enabled(lambda: self.enabled)  # for nav stack
 
   def _on_uninstall(self):
     ui_state.params.put_bool("DoUninstall", True, block=True)
@@ -384,4 +386,5 @@ class OnboardingWindow(Widget):
 
   def _render(self, _):
     rl.draw_rectangle_rec(self._rect, rl.BLACK)
-    self._terms.render(self._rect)
+    # self._terms.render(self._rect)
+    self.close()
