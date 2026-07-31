@@ -62,9 +62,19 @@ def livestream(started: bool, params: Params, CP: car.CarParams) -> bool:
   return params.get_bool("IsLiveStreaming")
 
 def fisker_secoc(started: bool, params: Params, CP: car.CarParams) -> bool:
-  # Fisker Ocean needs its per-vehicle SecOC key recovered over UDS before openpilot can sign
-  # ADAS control frames. The daemon self-exits once a valid key is stored.
-  return started and CP.brand == "fisker" and CP.secOcRequired
+  # Fisker Ocean needs its per-vehicle SecOC key recovered over UDS before openpilot can sign ADAS
+  # control frames. This is a one-shot recovery daemon: only expect it to run until a valid key is
+  # stored, otherwise the process monitor flags it as "not running" once it finishes (which blocks
+  # engagement).
+  if not (started and CP.brand == "fisker" and CP.secOcRequired):
+    return False
+  stored = params.get("SecOCKey")
+  if stored is None:
+    return True
+  try:
+    return len(bytes.fromhex(stored.strip())) != 16
+  except (ValueError, TypeError, AttributeError):
+    return True
 
 def or_(*fns):
   return lambda *args: operator.or_(*(fn(*args) for fn in fns))

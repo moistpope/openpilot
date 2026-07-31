@@ -60,7 +60,10 @@ The recovered key is consumed by the existing generic SecOC plumbing in
 ### 3. Process registration
 
 `fisker_secoc_keyd` is registered in `openpilot/system/manager/process_config.py` behind a
-`fisker_secoc` gate (`started and brand == "fisker" and secOcRequired`).
+`fisker_secoc` gate. Because it is a one-shot recovery daemon, the gate also returns `False` once a
+valid `SecOCKey` is stored — otherwise, once the daemon finishes and exits, the process monitor would
+keep restarting it and flag it as "not running", which blocks engagement. After a fresh recovery the
+daemon idles instead of exiting, so there's no restart race before the manager stops it.
 
 ## Lateral control takeover (opendbc side)
 

@@ -231,6 +231,14 @@ def main() -> None:
       except Exception:
         cloudlog.exception("fisker_secoc_keyd failed to restore OBD multiplexing")
 
+  # Key is recovered. Stay alive until the manager stops us (the fisker_secoc process gate drops
+  # once the key is stored) so the process monitor never sees us as "shouldBeRunning but not running"
+  # in the window between finishing and being stopped. The "already stored" early-return above still
+  # exits immediately, which is what a manual invocation wants.
+  cloudlog.warning("fisker_secoc_keyd key available, idling until stopped")
+  while True:
+    time.sleep(60)
+
 
 if __name__ == "__main__":
   main()
