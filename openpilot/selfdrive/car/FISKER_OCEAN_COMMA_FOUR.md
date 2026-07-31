@@ -77,10 +77,20 @@ required for the EPS to accept openpilot's steering, and both are now implemente
   the controller seeds its counters from the mirror (`running + 1`, next ARC) so there is no
   discontinuity for the EPS to reject; counters restart at 1 on each new reset epoch.
 
-## Known remaining gap — panda safety mode
+## Panda safety mode — `SAFETY_FISKER`
 
-The port still runs under `SafetyModel.allOutput`, a development-only mode with **no firmware-enforced
-torque/accel limits or fault checks**. A dedicated SecOC-aware `SAFETY_FISKER` mode
-(`opendbc/safety/modes/fisker.h`) is required before any on-road use. That work lives in the
-`opendbc` submodule and is out of scope for this openpilot-side integration branch. Until it exists,
-this configuration is for **bench / closed-course bring-up only**.
+The port now runs under `SafetyModel.fisker` (`opendbc/safety/modes/fisker.h`), which enforces the
+lateral limits in firmware:
+
+- **Steering** (`0x1D0`): absolute torque cap (±192), per-frame rate limits, a 250 ms real-time
+  rate bound, driver-torque blending (`TorqueDriverLimited`), and zero torque unless
+  `controls_allowed`.
+- **Authority** (`0x1C0`): allowlisted (carries no actuation).
+- **Longitudinal** (`0x121`): blocked unless the `LONGITUDINAL` safety flag is set (it is not, since
+  openpilot longitudinal is off); when enabled it is accel-limited.
+- Engagement follows the stock ACC (`pcm_cruise`), with brake/gas/speed monitored from the car bus,
+  and the stock module's control addresses are blocked from being forwarded across the relay.
+
+The enforced steering/accel **limits are still provisional placeholders**, and the driver-torque
+calibration is unverified, so this remains **bench / closed-course bring-up only** until they are
+tuned against real data.
