@@ -61,6 +61,11 @@ def only_offroad(started: bool, params: Params, CP: car.CarParams) -> bool:
 def livestream(started: bool, params: Params, CP: car.CarParams) -> bool:
   return params.get_bool("IsLiveStreaming")
 
+def fisker_secoc(started: bool, params: Params, CP: car.CarParams) -> bool:
+  # Fisker Ocean needs its per-vehicle SecOC key recovered over UDS before openpilot can sign
+  # ADAS control frames. The daemon self-exits once a valid key is stored.
+  return started and CP.brand == "fisker" and CP.secOcRequired
+
 def or_(*fns):
   return lambda *args: operator.or_(*(fn(*args) for fn in fns))
 
@@ -99,6 +104,7 @@ procs = [
   PythonProcess("joystickd", "openpilot.tools.joystick.joystickd", or_(joystick, notcar)),
   PythonProcess("selfdrived", "openpilot.selfdrive.selfdrived.selfdrived", only_onroad),
   PythonProcess("card", "openpilot.selfdrive.car.card", only_onroad),
+  PythonProcess("fisker_secoc_keyd", "openpilot.selfdrive.car.fisker_secoc_keyd", fisker_secoc),
   PythonProcess("deleter", "openpilot.system.loggerd.deleter", always_run),
   PythonProcess("dmonitoringd", "openpilot.selfdrive.monitoring.dmonitoringd", driverview, enabled=(WEBCAM or not PC)),
   PythonProcess("qcomgpsd", "openpilot.system.qcomgpsd.qcomgpsd", qcomgps, enabled=TICI),
